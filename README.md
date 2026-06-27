@@ -31,11 +31,26 @@ If cloning a repository that already includes it:
 
 ---
 
-## Include in Project
+## Build and Link (CMake)
 
-Add the include directory to your build system:
+The profiler ships its own `CMakeLists.txt`, which builds the static library
+target `glprofiler` (aliased as `glp::profiler`). Adding only the include
+directory is **not** enough — `src/profiler.cpp` must be compiled and linked, or
+you will get `undefined reference to Profiler::push/pop` at link time.
 
-    external/gl-profiler/include
+`glp/profiler.h` includes `<glad/glad.h>`, so the library must be able to find
+your GLAD loader headers. Point it at them with the `GLP_GL_INCLUDE_DIRS` cache
+variable before adding the subdirectory:
+
+    # Tell the profiler where to find <glad/glad.h>
+    set(GLP_GL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libraries/include CACHE STRING "" FORCE)
+
+    add_subdirectory(external/gl-profiler)
+
+    target_link_libraries(your_target PRIVATE glp::profiler)
+
+Linking the target propagates the public include directory automatically, so no
+separate `target_include_directories` call is needed.
 
 Then include it in code:
 
